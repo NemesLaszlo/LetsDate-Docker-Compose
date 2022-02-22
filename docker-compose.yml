@@ -1,0 +1,62 @@
+version: "3"
+services: 
+    
+    nginx:
+        build: 
+            context: ./Nginx
+            dockerfile: Dockerfile
+        ports: 
+            - 80:80
+        restart: always
+        depends_on:
+            - frontend
+            - backend
+        networks:
+            - letsdate-app-network
+        
+    frontend:
+        build:
+            context: ./LetsDate-Frontend
+            dockerfile: Dockerfile
+        ports: 
+            - 5000:80
+        depends_on:
+            - backend
+        networks:
+            - letsdate-app-network
+    
+    ms-sql-server:
+        image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+        environment:
+            ACCEPT_EULA: "Y"
+            SA_PASSWORD: "SuperSecurePasswordBookProject123"
+            MSSQL_PID: Express
+        ports:
+            - 1433:1433
+        networks:
+            - letsdate-app-network
+        
+    backend:
+        build: 
+            context: ./LestDate-API
+            dockerfile: Dockerfile
+        depends_on:
+            - ms-sql-server
+        networks:
+            - letsdate-app-network
+        environment:
+            - ASPNETCORE_ENVIRONMENT=Production
+            - ASPNETCORE_AppSettings__Token=ffc632ce-0053-4bab-8077-93a4d14caaad
+            - ASPNETCORE_AppSettings__DbServer=ms-sql-server
+            - ASPNETCORE_AppSettings__DbPort=1433
+            - ASPNETCORE_AppSettings__DbUser=sa
+            - ASPNETCORE_AppSettings__Password=SuperSecurePasswordBookProject123
+            - ASPNETCORE_AppSettings__Database=LetsDate
+            - ASPNETCORE_Cloudinary__CloudName=name
+            - ASPNETCORE_Cloudinary__ApiKey=key
+            - ASPNETCORE_Cloudinary__ApiSecret=secret
+        ports: 
+            - 8090:80
+
+networks:
+    letsdate-app-network:
